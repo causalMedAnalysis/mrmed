@@ -1,0 +1,32 @@
+{smcl}
+{txt}{sf}{ul off}
+{.-}
+{s6hlp}
+package ^mrmed^ from https://github.com/causalMedAnalysis/mrmed
+{smcl}
+{.-}
+{s6hlp}
+
+{smcl}
+{hilite:TITLE}{p 6 8}'MRMED': module to perform causal mediation analysis using parametric multiply robust methods{p_end}
+{s6hlp}
+
+^DESCRIPTION/AUTHOR(S)^
+      
+mrmed performs causal mediation analysis using parametric multiply robust methods.
+      
+Requires: Stata version 15
+      
+Distribution-Date: 20240724
+      
+Author: Geoff Wodtke, University of Chicago
+Support: email wodtke@@uchicago.edu
+      
+
+^INSTALLATION FILES^                              (type ^net install^ ^mrmed^)
+      mrmed.ado
+	  mrmed_type1.ado
+	  mrmed_type2.ado
+      mrmed.sthlp
+
+{txt}{sf}{ul off}
