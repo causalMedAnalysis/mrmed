@@ -23,8 +23,8 @@ mrmed varname, type(string) dvar(varname) mvar(varname) d(real) dstar(real) [opt
 
 - `cvars(varlist)`: Baseline covariates to be included in the analysis.
 - `nointer`: Specifies excluding treatment-mediator interaction in the outcome model.
-- `cxd`: Includes all two-way interactions between the treatment and baseline covariates.
-- `cxm`: Includes all two-way interactions between the mediator and baseline covariates.
+- `cxd`: Includes all two-way interactions between the treatment and baseline covariates in the outcome and mediator models.
+- `cxm`: Includes all two-way interactions between the mediator and baseline covariates in the outcome models.
 - `reps(integer)`: Number of replications for bootstrap resampling, default is 200.
 - `strata(varname)`: Variable that identifies resampling strata.
 - `cluster(varname)`: Variable that identifies resampling clusters.
