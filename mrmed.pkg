@@ -10,6 +10,6 @@ d Author: Geoff Wodtke, University of Chicago
 d Support: email wodtke@@uchicago.edu
 d
 f mrmed.ado
-f mrmed_type1.ado
-f mrmed_type2.ado
+f mr1med.ado
+f mr2med.ado
 f mrmed.sthlp

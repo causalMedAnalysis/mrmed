@@ -25,8 +25,8 @@ Support: email wodtke@@uchicago.edu
 
 ^INSTALLATION FILES^                              (type ^net install^ ^mrmed^)
       mrmed.ado
-	  mrmed_type1.ado
-	  mrmed_type2.ado
+	  mr1med.ado
+	  mr2med.ado
       mrmed.sthlp
 
 {txt}{sf}{ul off}
