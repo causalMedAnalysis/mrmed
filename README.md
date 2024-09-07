@@ -1,88 +1,111 @@
-# mrmed: Causal Mediation Analysis Using Parametric Multiply Robust Methods
+# mrmed: Causal Mediation Analysis using Parametric Multiply Robust Methods
 
-`mrmed` is a Stata module designed to perform causal mediation analysis using parametric multiply robust methods.
+## Overview
+
+**mrmed** is a Stata module that performs causal mediation analysis using parametric multiply robust methods. It supports two different types of robust estimation (`mr1` and `mr2`), which are described below.
 
 ## Syntax
 
 ```stata
-mrmed varname, type(string) dvar(varname) mvar(varname) d(real) dstar(real) [options]
+mrmed depvar mvars [if] [in], type(string) dvar(varname) d(real) dstar(real) [options]
 ```
 
 ### Required Arguments
 
-- `varname`: Specifies the outcome variable.
-- `type(string)`: Specifies the type of multiply robust estimator. Options are `mr1` and `mr2`. 
-  - For `mr1`, both the exposure and mediator must be binary and coded 0/1.
-  - For `mr2`, only the exposure must be binary and coded 0/1.
-- `dvar(varname)`: Specifies the treatment (exposure) variable, must be binary.
-- `mvar(varname)`: Specifies the mediator variable, which must be binary for `mr1` and can be binary, ordinal, or continuous for `mr2`.
-- `d(real)`: Reference level of treatment.
-- `dstar(real)`: Alternative level of treatment, defines the treatment contrast.
+- `type(string)`: Specifies which multiply robust estimator to implement. Options are `mr1` and `mr2`.
+  - For `mr1`: Both the exposure and a univariate mediator must be binary (0/1).
+  - For `mr2`: Only the exposure must be binary (0/1), and multiple mediators are allowed.
+- `depvar`: Specifies the outcome variable.
+- `mvars`: Specifies the mediator(s), which can be multivariate when using `mr2`.
+- `dvar(varname)`: Specifies the binary treatment (exposure) variable (0/1).
+- `d(real)`: Specifies the reference level of treatment.
+- `dstar(real)`: Specifies the alternative level of treatment. Together, (d - dstar) defines the treatment contrast of interest.
 
 ### Options
 
-- `cvars(varlist)`: Baseline covariates to be included in the analysis.
-- `nointer`: Specifies excluding treatment-mediator interaction in the outcome model.
-- `cxd`: Includes all two-way interactions between the treatment and baseline covariates in the outcome and mediator models.
-- `cxm`: Includes all two-way interactions between the mediator and baseline covariates in the outcome models.
-- `reps(integer)`: Number of replications for bootstrap resampling, default is 200.
-- `strata(varname)`: Variable that identifies resampling strata.
-- `cluster(varname)`: Variable that identifies resampling clusters.
-- `level(cilevel)`: Confidence level for bootstrap confidence intervals, default is 95%.
-- `seed(passthru)`: Seed for bootstrap resampling.
-- `detail`: Prints fitted models used to construct the nuisance functions.
+- `cvars(varlist)`: Specifies the list of baseline covariates to include in the analysis. Categorical variables must be coded as dummy variables.
+- `nointeraction`: Specifies whether a treatment-mediator interaction is not included in the outcome model. By default, interactions are included.
+- `cxd`: Includes all two-way interactions between the treatment and baseline covariates in the mediator and outcome models.
+- `cxm`: Includes all two-way interactions between the mediators and baseline covariates in the outcome model.
+- `censor`: Specifies that the inverse probability weights used in the robust estimating equations are censored at the 1st and 99th percentiles.
+- `reps(integer 200)`: Specifies the number of bootstrap replications (default is 200).
+- `strata(varname)`: Identifies resampling strata. Bootstrap samples are taken independently within each stratum if this option is specified.
+- `cluster(varname)`: Identifies resampling clusters. Bootstrap samples are drawn from clusters if specified.
+- `level(cilevel)`: Specifies the confidence level for bootstrap confidence intervals (default is 95%).
+- `seed(passthru)`: Specifies the seed for bootstrap resampling. If omitted, a random seed is used, making results non-replicable.
+- `detail`: Prints the fitted models used to construct the nuisance terms in the robust estimating equations.
 
 ## Description
 
-`mrmed` utilizes multiple regression models to estimate the causal mediation effects robustly:
-- For `mr1`, it estimates:
-  1. A logit model for the exposure conditional on baseline covariates.
-  2. A logit model for the mediator conditional on the exposure and baseline covariates.
-  3. A linear regression model for the outcome conditional on the exposure, mediator, and baseline covariates.
-- For `mr2`, it estimates:
-  1. A logit model for the exposure conditional on baseline covariates.
-  2. A linear regression model for the outcome conditional on the exposure, mediator, and baseline covariates.
-  3. A linear regression model for the predicted values from the previous model conditional on the exposure and baseline covariates.
+`mrmed` performs causal mediation analysis using multiply robust methods.
 
-These models are used to construct weights and imputations for robust estimating equations targeting the total, natural direct, and natural indirect effects.
+For type(mr1) estimation, three models are estimated: 
+1. A logit model for the exposure conditional on the baseline covariates (if specified).
+2. A logit model for a single binary mediator conditional on the exposure and baseline covariates.
+3. A linear regression model for the outcome conditional on the exposure, the single mediator, and baseline covariates.
+
+These models are then used to construct weights and imputations for a set of multiply robust estimating equations that target the total, natural direct, and natural indirect effects.
+
+For type(mr2) estimation, five models are estimated:
+1. A logit model for the exposure conditional on baseline covariates (if specified).
+2. Another logit model for the exposure conditional on the mediator(s) and baseline confounders.
+3. A linear regression model for the outcome conditional on the exposure, mediator(s), and baseline covariates.
+4. A linear regression model for the imputations from model (3) under the reference level of treatment.
+5. A linear regression model for the imputations from model (3) under the alternative level of treatment.
+
+These models are then used to construct weights and imputations for another set of multiply robust estimating equations that also target total and natural effects. Because type(mr2) estimation does not require modeling the mediator(s), it can be used with multiple mediators and these variables may be binary, ordinal, or continuous. When a single mediator is specified, type(mr2) estimation targets natural direct and indirect effects. When multiple mediators are specified, it targets multivariate natural direct and indirect effects operating through all mediators considered together.
 
 ## Examples
 
+### Example 1: type(mr1) estimation, percentile bootstrap CIs
+
 ```stata
-// Load data
-use nlsy79.dta
+. use nlsy79.dta
+. mrmed std_cesd_age40 ever_unemp_age3539, type(mr1) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) reps(1000)
+```
 
-// mr1 estimation with default settings
-mrmed std_cesd_age40, type(mr1) dvar(att22) mvar(ever_unemp_age3539) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) reps(1000)
+### Example 2: type(mr1) estimation, percentile bootstrap CIs, censoring the weights
 
-// mr2 estimation with default settings
-mrmed std_cesd_age40, type(mr2) dvar(att22) mvar(ever_unemp_age3539) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) reps(1000)
+```stata
+. mrmed std_cesd_age40 ever_unemp_age3539, type(mr1) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) censor reps(1000)
+```
 
-// mr2 estimation with all two-way interactions
-mrmed std_cesd_age40, type(mr2) dvar(att22) mvar(ever_unemp_age3539) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm reps(1000)
+### Example 3: type(mr2) estimation, percentile bootstrap CIs, censoring the weights
+
+```stata
+. mrmed std_cesd_age40 ever_unemp_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) censor reps(1000)
+```
+
+### Example 4: type(mr2) estimation, all two-way interactions, percentile bootstrap CIs, censoring the weights
+
+```stata
+. mrmed std_cesd_age40 ever_unemp_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm censor reps(1000)
+```
+
+### Example 5: type(mr2) estimation with multiple mediators, all two-way interactions, percentile bootstrap CIs, censoring the weights
+
+```stata
+. mrmed std_cesd_age40 ever_unemp_age3539 log_faminc_adj_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm censor reps(1000)
 ```
 
 ## Saved Results
 
-`mrmed` saves the following results in `e()`:
+The following results are saved in `e()`:
 
-- **Matrices**:
-  - `e(b)`: Matrix containing direct, indirect, and total effect estimates.
+- **Matrices:**
+  - `e(b)`: Matrix containing total, direct, and indirect effect estimates.
 
 ## Author
 
-Geoffrey T. Wodtke  
+**Geoffrey T. Wodtke**  
 Department of Sociology  
-University of Chicago
-
+University of Chicago  
 Email: [wodtke@uchicago.edu](mailto:wodtke@uchicago.edu)
 
 ## References
 
-- Wodtke GT and Zhou X. Causal Mediation Analysis. In preparation.
+- Wodtke GT and Zhou X. *Causal Mediation Analysis*. In preparation.
 
-## Also See
+## See Also
 
-- [regress R](#)
-- [logit R](#)
-- [bootstrap R](#)
+- Stata manual: [regress](https://www.stata.com/manuals/rregress.pdf), [logit](https://www.stata.com/manuals/rlogit.pdf), [bootstrap](https://www.stata.com/manuals/rbootstrap.pdf)
