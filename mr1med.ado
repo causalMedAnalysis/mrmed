@@ -33,6 +33,7 @@ program define mr1med, rclass
 		qui gen `inter' = `dvar' * `mvar' if `touse'
 	}
 
+	local cxd_vars
 	if ("`cxd'"!="") {	
 		foreach c in `cvars' {
 			tempvar `dvar'X`c'
@@ -41,6 +42,7 @@ program define mr1med, rclass
 		}
 	}
 
+	local cxm_vars
 	if ("`cxm'"!="") {	
 		foreach c in `cvars' {
 			tempvar `mvar'X`c'

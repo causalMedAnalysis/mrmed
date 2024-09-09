@@ -27,6 +27,7 @@ program define mr2med, rclass
 			
 	gettoken yvar mvars : varlist
 	
+	local inter
 	if ("`nointeraction'" == "") {
 		foreach m in `mvars' {
 			tempvar i_`m'
@@ -34,7 +35,8 @@ program define mr2med, rclass
 			local inter `inter' `i_`m''
 		}
 	}
-		
+	
+	local cxd_vars
 	if ("`cxd'"!="") {	
 		foreach c in `cvars' {
 			tempvar `dvar'X`c'
@@ -44,6 +46,7 @@ program define mr2med, rclass
 	}
 
 	local i = 1
+	local cxm_vars
 	if ("`cxm'"!="") {	
 		foreach c in `cvars' {
 			foreach m in `mvars' {
