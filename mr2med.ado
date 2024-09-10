@@ -63,7 +63,7 @@ program define mr2med, rclass
 	
 	di ""
 	di "Model for `dvar' conditional on {cvars}:"
-	logit `dvar' `cvars' 
+	logit `dvar' `cvars'  if `touse'
 	
 	tempvar phat_D1_C pi`d'_C pi`dstar'_C
 	qui predict `phat_D1_C' if `touse', pr
@@ -72,7 +72,7 @@ program define mr2med, rclass
 	
 	di ""
 	di "Model for `dvar' conditional on {cvars `mvars'}:"
-	logit `dvar' `mvars' `cvars' `cxm_vars'
+	logit `dvar' `mvars' `cvars' `cxm_vars' if `touse'
 	
 	tempvar phat_D1_CM pi`d'_CM pi`dstar'_CM
 	qui predict `phat_D1_CM' if `touse', pr
@@ -215,25 +215,25 @@ program define mr2med, rclass
 	tempvar dr`d'`d'_summand
 	qui gen `dr`d'`d'_summand' = `ipw`d'C'*(`yvar' - `mu`d'_CM') ///
 		+ `ipw`d'C'*(`mu`d'_CM' - `nu`d'Ofmu`d'_C') ///
-		+ `nu`d'Ofmu`d'_C'
+		+ `nu`d'Ofmu`d'_C' if `touse'
 		
 	tempvar dr`dstar'`dstar'_summand
 	qui gen `dr`dstar'`dstar'_summand' = `ipw`dstar'C'*(`yvar' - `mu`dstar'_CM') ///
 		+ `ipw`dstar'C'*(`mu`dstar'_CM' - `nu`dstar'Ofmu`dstar'_C') ///
-		+ `nu`dstar'Ofmu`dstar'_C'
+		+ `nu`dstar'Ofmu`dstar'_C' if `touse'
 
 	tempvar dr`dstar'`d'_summand
 	qui gen `dr`dstar'`d'_summand' = `ipw`dstar'`d'CM'*(`yvar' - `mu`d'_CM') ///
 		+ `ipw`dstar'C'*(`mu`d'_CM' - `nu`dstar'Ofmu`d'_C') ///
-		+ `nu`dstar'Ofmu`d'_C'
+		+ `nu`dstar'Ofmu`d'_C' if `touse'
 			
-	qui reg `dr`d'`d'_summand'
+	qui reg `dr`d'`d'_summand' if `touse'
 	return scalar psi`d'`d' = _b[_cons]
 	
-	qui reg `dr`dstar'`dstar'_summand'
+	qui reg `dr`dstar'`dstar'_summand' if `touse'
 	return scalar psi`dstar'`dstar' = _b[_cons]
 
-	qui reg `dr`dstar'`d'_summand'
+	qui reg `dr`dstar'`d'_summand' if `touse'
 	return scalar psi`dstar'`d' = _b[_cons]
 
 end mr2med
