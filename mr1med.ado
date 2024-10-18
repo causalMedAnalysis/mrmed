@@ -17,7 +17,7 @@ program define mr1med, rclass
 		[NOINTERaction] ///
 		[cxd] ///
 		[cxm] ///
-		[censor]
+		[censor(numlist min=2 max=2)] 
 	
 	qui {
 		marksample touse
@@ -175,6 +175,7 @@ program define mr1med, rclass
 	if ("`nointeraction'" == "") {
 		qui replace `inter' = `dvar' * `mvar' if `touse'
 	}
+	
 	if ("`cxd'"!="") {	
 		foreach c in `cvars' {
 			qui replace ``dvar'X`c'' = `dvar' * `c' if `touse'
@@ -249,15 +250,15 @@ program define mr1med, rclass
 	qui gen `rmpw' = `ipw`d''*(`f_M_CD`dstar''/`f_M_CD`d'') if `touse'
 
 	if ("`censor'"!="") {
-		qui centile `ipw`d'' if `ipw`d''!=. & `dvar'==`d' & `touse', c(1 99) 
+		qui centile `ipw`d'' if `ipw`d''!=. & `dvar'==`d' & `touse', c(`censor') 
 		qui replace `ipw`d''=r(c_1) if `ipw`d''<r(c_1) & `ipw`d''!=. & `dvar'==`d' & `touse'
 		qui replace `ipw`d''=r(c_2) if `ipw`d''>r(c_2) & `ipw`d''!=. & `dvar'==`d' & `touse'
 	
-		qui centile `ipw`dstar'' if `ipw`dstar''!=. & `dvar'==`dstar' & `touse', c(1 99) 
+		qui centile `ipw`dstar'' if `ipw`dstar''!=. & `dvar'==`dstar' & `touse', c(`censor') 
 		qui replace `ipw`dstar''=r(c_1) if `ipw`dstar''<r(c_1) & `ipw`dstar''!=. & `dvar'==`dstar' & `touse'
 		qui replace `ipw`dstar''=r(c_2) if `ipw`dstar''>r(c_2) & `ipw`dstar''!=. & `dvar'==`dstar' & `touse'	
 
-		qui centile `rmpw' if `rmpw'!=. & `dvar'==`d' & `touse', c(1 99) 
+		qui centile `rmpw' if `rmpw'!=. & `dvar'==`d' & `touse', c(`censor') 
 		qui replace `rmpw'=r(c_1) if `rmpw'<r(c_1) & `rmpw'!=. & `dvar'==`d' & `touse'
 		qui replace `rmpw'=r(c_2) if `rmpw'>r(c_2) & `rmpw'!=. & `dvar'==`d' & `touse'
 	}

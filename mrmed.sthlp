@@ -9,7 +9,6 @@
 {p2col : {cmd:mrmed} {hline 2}} causal mediation analysis using parametric multiply robust methods{p_end}
 {p2colreset}{...}
 
-
 {title:Syntax}
 
 {p 8 18 2}
@@ -22,13 +21,9 @@
 {opt nointer:action} 
 {opt cxd} 
 {opt cxm} 
-{opt censor}
-{opt reps(integer 200)} 
-{opt strata(varname)} 
-{opt cluster(varname)} 
-{opt level(cilevel)} 
-{opt seed(passthru)} 
+{opt censor(numlist)}
 {opt detail}
+[{it:{help bootstrap##options:bootstrap_options}}]
 
 {phang}{opt type(string)} - this specifies which multiply robust estimator to implement. Options are mr1 and mr2. 
 For type(mr1), both the exposure and a univariate mediator must be binary (0/1). 
@@ -61,25 +56,16 @@ included in the outcome model.
 
 {phang}{opt censor} - this option specifies that the inverse probability weights used in the robust estimating equations are censored at their 1st and 99th percentiles.
 
-{phang}{opt reps(integer 200)} - this option specifies the number of replications for bootstrap resampling (the default is 200).
+{phang}{opt censor(numlist)} - this option specifies that the inverse probability weights used in the robust estimating equations are censored at the percentiles supplied in {numlist}. For example,
+censor(1 99) censors the weights at their 1st and 99th percentiles.
 
-{phang}{opt strata(varname)} - this option specifies a variable that identifies resampling strata. If this option is specified, 
-then bootstrap samples are taken independently within each stratum.
+{phang}{opt detail} - this option prints the fitted models used to construct the nuisance terms in the robust estimating equations.
 
-{phang}{opt cluster(varname)} - this option specifies a variable that identifies resampling clusters. If this option is specified,
-then the sample drawn during each replication is a bootstrap sample of clusters.
-
-{phang}{opt level(cilevel)} - this option specifies the confidence level for constructing bootstrap confidence intervals. If this 
-option is omitted, then the default level of 95% is used.
-
-{phang}{opt seed(passthru)} - this option specifies the seed for bootstrap resampling. If this option is omitted, then a random 
-seed is used and the results cannot be replicated. {p_end}
-
-{phang}{opt detail} - this option prints the fitted models used to construct the nuisance terms in the robust estimating equations. {p_end}
+{phang}{it:{help bootstrap##options:bootstrap_options}} - all {help bootstrap} options are available. {p_end}
 
 {title:Description}
 
-{pstd}{cmd:mrmed} performs causal mediation analysis using multiply robust methods. {p_end}
+{pstd}{cmd:mrmed} performs causal mediation analysis using multiply robust methods, and it computes inferential statistics using the nonparametric bootstrap. {p_end}
 
 {pstd}For type(mr1) estimation, three models are estimated: (1) a logit model for the exposure conditional on the baseline covariates (if specified), (2) 
 a logit model for a single binary mediator conditional on the exposure and baseline covariates, and (3) a linear regression model for the outcome conditional 
@@ -106,19 +92,19 @@ operating through all mediators considered together. {p_end}
 
 {pstd} type(mr1) estimation, percentile bootstrap CIs, censoring the weights: {p_end}
  
-{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539, type(mr1) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) censor reps(1000)} {p_end}
+{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539, type(mr1) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) censor(1 99) reps(1000)} {p_end}
 
 {pstd} type(mr2) estimation, percentile bootstrap CIs, censoring the weights: {p_end}
  
-{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) censor reps(1000)} {p_end}
+{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) censor(1 99) reps(1000)} {p_end}
 
 {pstd} type(mr2) estimation, all two-way interactions, percentile bootstrap CIs, censoring the weights: {p_end}
  
-{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm censor reps(1000)} {p_end}
+{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm censor(1 99) reps(1000)} {p_end}
 
 {pstd} type(mr2) estimation with multiple mediators, all two-way interactions, percentile bootstrap CIs, censoring the weights: {p_end}
  
-{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539 log_faminc_adj_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm censor reps(1000)} {p_end}
+{phang2}{cmd:. mrmed std_cesd_age40 ever_unemp_age3539 log_faminc_adj_age3539, type(mr2) dvar(att22) cvars(female black hispan paredu parprof parinc_prank famsize afqt3) d(1) dstar(0) cxd cxm censor(1 99) reps(1000)} {p_end}
 
 {title:Saved results}
 

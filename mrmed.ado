@@ -13,18 +13,12 @@ program define mrmed, eclass
 		dvar(varname numeric) ///
 		d(real) ///
 		dstar(real) ///
-		[cvars(varlist numeric)] ///
-		[NOINTERaction] ///
-		[cxd] ///
-		[cxm] ///
-		[censor] ///
-		[reps(integer 200)] ///
-		[strata(varname numeric)] ///
-		[cluster(varname numeric)] ///
-		[level(cilevel)] ///
-		[seed(passthru)] ///
-		[saving(string)] ///
-		[detail]
+		[cvars(varlist numeric) ///
+		NOINTERaction ///
+		cxd ///
+		cxm ///
+		censor(numlist min=2 max=2) ///
+		detail * ]
 
 	qui {
 		marksample touse
@@ -41,8 +35,28 @@ program define mrmed, eclass
 	if !`nmrtype' {
 		display as error "Error: type must be chosen from: `mrtypes'."
 		error 198		
+	}
+
+	if ("`censor'" != "") {
+		local censor1: word 1 of `censor'
+		local censor2: word 2 of `censor'
+
+		if (`censor1' >= `censor2') {
+			di as error "The first number in the censor() option must be less than the second."
+			error 198
 		}
-	
+
+		if (`censor1' < 1 | `censor1' > 49) {
+			di as error "The first number in the censor() option must be between 1 and 49."
+			error 198
+		}
+
+		if (`censor2' < 51 | `censor2' > 99) {
+			di as error "The second number in the censor() option must be between 51 and 99."
+			error 198
+		}
+	}
+
 	if ("`type'"=="mr1") {
 	
 		if (`num_mvars' > 1) {
@@ -66,29 +80,14 @@ program define mrmed, eclass
 				d(`d') dstar(`dstar') `nointeraction' `cxd' `cxm'
 		}
 			
-		if ("`saving'" != "") {
-			bootstrap ///
-				ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
-				NDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
-				NIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
-					reps(`reps') strata(`strata') cluster(`cluster') level(`level') `seed' ///
-					saving(`saving', replace) noheader notable: ///
+		bootstrap ///
+			ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
+			NDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
+			NIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
+				`options' noheader notable: ///
 					mr1med `yvar' if `touse', ///
-						dvar(`dvar') mvar(`mvars') cvars(`cvars') ///
-						d(`d') dstar(`dstar') `nointeraction' `cxd' `cxm' `censor'
-		}
-
-		if ("`saving'" == "") {
-			bootstrap ///			
-				ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
-				NDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
-				NIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
-					reps(`reps') strata(`strata') cluster(`cluster') level(`level') `seed' ///
-					noheader notable: ///
-						mr1med `yvar' if `touse', ///
-						dvar(`dvar') mvar(`mvars') cvars(`cvars') ///
-						d(`d') dstar(`dstar') `nointeraction' `cxd' `cxm' `censor'
-		}
+						dvar(`dvar') mvar(`mvars') d(`d') dstar(`dstar') ///
+						cvars(`cvars') `nointeraction' `cxd' `cxm' censor(`censor')
 			
 		estat bootstrap, p noheader
 
@@ -111,56 +110,26 @@ program define mrmed, eclass
 
 		if (`num_mvars'==1) {
 		
-			if ("`saving'" != "") {
-				bootstrap ///
-					ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
-					NDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
-					NIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
-						reps(`reps') strata(`strata') cluster(`cluster') level(`level') `seed' ///
-						saving(`saving', replace) noheader notable: ///
-							mr2med `yvar' `mvars' if `touse', ///
-							dvar(`dvar') d(`d') dstar(`dstar') ///
-							cvars(`cvars') `nointeraction' `cxd' `cxm' `censor'
-			}
-
-			if ("`saving'" == "") {
-				bootstrap ///			
-					ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
-					NDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
-					NIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
-						reps(`reps') strata(`strata') cluster(`cluster') level(`level') `seed' ///
-						noheader notable: ///
-							mr2med `yvar' `mvars' if `touse', ///
-							dvar(`dvar') d(`d') dstar(`dstar') ///
-							cvars(`cvars') `nointeraction' `cxd' `cxm' `censor'
-			}
+			bootstrap ///
+				ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
+				NDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
+				NIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
+					`options' noheader notable: ///
+						mr2med `yvar' `mvars' if `touse', ///
+							dvar(`dvar') d(`d') dstar(`dstar') cvars(`cvars') ///
+							`nointeraction' `cxd' `cxm' censor(`censor')
 		}
 
 		if (`num_mvars'>=2) {
 		
-			if ("`saving'" != "") {
-				bootstrap ///
-					ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
-					MNDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
-					MNIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
-						reps(`reps') strata(`strata') cluster(`cluster') level(`level') `seed' ///
-						saving(`saving', replace) noheader notable: ///
-							mr2med `yvar' `mvars' if `touse', ///
-							dvar(`dvar') d(`d') dstar(`dstar') ///
-							cvars(`cvars') `nointeraction' `cxd' `cxm' `censor'
-			}
-
-			if ("`saving'" == "") {
-				bootstrap ///			
-					ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
-					MNDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
-					MNIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
-						reps(`reps') strata(`strata') cluster(`cluster') level(`level') `seed' ///
-						noheader notable: ///
-							mr2med `yvar' `mvars' if `touse', ///
-							dvar(`dvar') d(`d') dstar(`dstar') ///
-							cvars(`cvars') `nointeraction' `cxd' `cxm' `censor'
-			}
+			bootstrap ///
+				ATE=(r(psi`d'`d')-r(psi`dstar'`dstar')) ///
+				MNDE=(r(psi`dstar'`d')-r(psi`dstar'`dstar')) ///
+				MNIE=(r(psi`d'`d')-r(psi`dstar'`d')), ///
+					`options' noheader notable: ///
+						mr2med `yvar' `mvars' if `touse', ///
+							dvar(`dvar') d(`d') dstar(`dstar') cvars(`cvars') ///
+							`nointeraction' `cxd' `cxm' censor(`censor')
 		}
 		
 		estat bootstrap, p noheader
